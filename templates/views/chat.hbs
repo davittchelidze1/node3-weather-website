@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Chat</title>
+    <link rel="icon" href="/img/weather.png">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/chat.css">
+</head>
+
+<body>
+    <div class="main-content">
+        {{>header}}
+
+        <div id="login-section">
+            <h2>Join Chat</h2>
+            <p>Enter a username to chat anonymously, or <button id="show-login-btn" class="link-btn">log in</button> to enable friend requests.</p>
+            <div id="anonymous-join">
+                <input id="username-input" placeholder="Choose a username (optional)" />
+                <button id="join-anon-btn">Join as Guest</button>
+            </div>
+            <div id="auth-form" style="display:none;">
+                <input id="auth-email" type="email" placeholder="Email" />
+                <input id="auth-password" type="password" placeholder="Password" />
+                <button id="login-btn">Log In</button>
+                <button id="signup-btn">Sign Up</button>
+                <button id="cancel-auth-btn" class="link-btn">Cancel</button>
+                <p id="auth-error" style="color:red;"></p>
+            </div>
+        </div>
+
+        <div id="chat-section" style="display:none;">
+            <div id="chat-header">
+                <span id="chat-welcome"></span>
+                <button id="logout-btn" style="display:none;">Log Out</button>
+            </div>
+            <div id="chat-layout">
+                <div id="messages-container">
+                    <div id="messages"></div>
+                    <form id="message-form">
+                        <input id="message-input" placeholder="Type a message..." autocomplete="off" />
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
+                <div id="users-panel">
+                    <h3>Online</h3>
+                    <ul id="user-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{>footer}}
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
+</body>
+
+</html>

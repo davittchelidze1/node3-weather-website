@@ -1,12 +1,16 @@
 const path = require('path')
+const http = require('http')
 const express = require('express')
 const hbs = require('hbs')
+const { Server } = require('socket.io')
 require('dotenv').config()
 const geocode = require('./utils/geocode')
 const forecast = require('./utils/forecast')
 
 
 const app = express()
+const server = http.createServer(app)
+const io = new Server(server)
 const port = process.env.PORT || 3000
 
 // Define paths for Express config
@@ -72,6 +76,64 @@ app.get('/weather',(req,res)=>{
 
 
 
+app.get('/chat', (req, res) => {
+    res.render('chat',{
+        title: 'Chat',
+        name: 'Datochela'
+    })
+})
+
+// Chat room - track connected users (username -> socket id)
+const connectedUsers = {}
+
+io.on('connection', (socket) => {
+    socket.on('join', ({ username }) => {
+        socket.username = username || ('Guest_' + socket.id.slice(0, 6))
+        connectedUsers[socket.id] = socket.username
+        io.emit('userList', Object.values(connectedUsers))
+        io.emit('message', {
+            username: 'System',
+            text: `${socket.username} has joined the chat`,
+            system: true
+        })
+    })
+
+    socket.on('sendMessage', ({ text }) => {
+        if (!text || !text.trim()) return
+        io.emit('message', {
+            username: socket.username || 'Anonymous',
+            text: text.trim()
+        })
+    })
+
+    socket.on('friendRequest', ({ from, to }) => {
+        // Notify the target user if they are online
+        for (const [id, username] of Object.entries(connectedUsers)) {
+            if (username === to) {
+                io.to(id).emit('message', {
+                    username: 'System',
+                    text: `${from} sent you a friend request!`,
+                    system: true
+                })
+                break
+            }
+        }
+    })
+
+    socket.on('disconnect', () => {
+        if (socket.username) {
+            delete connectedUsers[socket.id]
+            io.emit('userList', Object.values(connectedUsers))
+            io.emit('message', {
+                username: 'System',
+                text: `${socket.username} has left the chat`,
+                system: true
+            })
+        }
+    })
+})
+
+
 app.get('/products',(req,res)=>{
     if(!req.query.search){
         return res.send({
@@ -107,6 +169,6 @@ app.get('*',(req,res)=>{
 })
 
 
-app.listen(port, ()=>{
+server.listen(port, ()=>{
     console.log('Server is up on port ' + port)
 })

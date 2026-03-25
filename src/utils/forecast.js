@@ -1,18 +1,26 @@
-const request = require('request') 
-
-
-const forecast = (longitude,latitude, callback) => {
-    const url = 'http://api.weatherstack.com/current?access_key='+ process.env.WEATHERSTACK_API_KEY +'&query='+ latitude  + ',' +  longitude
-    request({url, json:true}, (error, {body}) =>{
-        if (error){
-            callback('Unable to connect to weather service!', undefined)
-        } else if (body.error){
-            callback('unable to find the location',undefined)
-        } else
-            callback(undefined, body.current.weather_descriptions[0] + '. It is currently ' + body.current.temperature + 
-          ' degrees out. It feels like '+ body.current.feelslike +' degrees out. The humidity is ' + body.current.humidity + '%.')
+const forecast = async (longitude, latitude, callback) => {
+    const url = 'https://api.weatherstack.com/current?access_key=' +
+        process.env.WEATHERSTACK_API_KEY +
+        '&query=' + latitude + ',' + longitude
+    try {
+        const response = await fetch(url)
+        if (!response.ok) {
+            return callback('Weather service returned an error', undefined)
+        }
+        const body = await response.json()
+        if (body.error) {
+            return callback('Unable to find the location', undefined)
+        }
+        const { weather_descriptions, temperature, feelslike, humidity } = body.current
+        callback(undefined,
+            weather_descriptions[0] +
+            '. It is currently ' + temperature +
+            ' degrees out. It feels like ' + feelslike +
+            ' degrees out. The humidity is ' + humidity + '%.'
+        )
+    } catch (error) {
+        callback('Unable to connect to weather service!', undefined)
     }
-    )
 }
 
 module.exports = forecast

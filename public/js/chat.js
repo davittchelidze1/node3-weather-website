@@ -1,51 +1,26 @@
-// Firebase config — replace with your project's config values
-// or set via a /api/firebase-config endpoint to avoid hardcoding
-const FIREBASE_CONFIG = window.__firebaseConfig || null
-
-// ---- Firebase Auth (optional) ----
-let firebaseAuth = null
-let currentUser = null  // { uid, email } when logged in, null for guests
-
-function initFirebase () {
-    if (!FIREBASE_CONFIG) return
-    if (!window.firebase) return
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(FIREBASE_CONFIG)
-        }
-        firebaseAuth = firebase.auth()
-        firebaseAuth.onAuthStateChanged((user) => {
-            currentUser = user || null
-        })
-    } catch (e) {
-        console.warn('Firebase init failed:', e)
-    }
-}
-
-initFirebase()
-
 // ---- DOM refs ----
-const loginSection    = document.getElementById('login-section')
-const chatSection     = document.getElementById('chat-section')
-const anonJoin        = document.getElementById('anonymous-join')
-const authForm        = document.getElementById('auth-form')
-const usernameInput   = document.getElementById('username-input')
-const joinAnonBtn     = document.getElementById('join-anon-btn')
-const showLoginBtn    = document.getElementById('show-login-btn')
-const cancelAuthBtn   = document.getElementById('cancel-auth-btn')
-const loginBtn        = document.getElementById('login-btn')
-const signupBtn       = document.getElementById('signup-btn')
-const authEmail       = document.getElementById('auth-email')
-const authPassword    = document.getElementById('auth-password')
-const authError       = document.getElementById('auth-error')
-const chatWelcome     = document.getElementById('chat-welcome')
-const logoutBtn       = document.getElementById('logout-btn')
-const messagesEl      = document.getElementById('messages')
-const messageForm     = document.getElementById('message-form')
-const messageInput    = document.getElementById('message-input')
-const userListEl      = document.getElementById('user-list')
+const loginSection  = document.getElementById('login-section')
+const chatSection   = document.getElementById('chat-section')
+const anonJoin      = document.getElementById('anonymous-join')
+const authForm      = document.getElementById('auth-form')
+const usernameInput = document.getElementById('username-input')
+const joinAnonBtn   = document.getElementById('join-anon-btn')
+const showLoginBtn  = document.getElementById('show-login-btn')
+const cancelAuthBtn = document.getElementById('cancel-auth-btn')
+const loginBtn      = document.getElementById('login-btn')
+const signupBtn     = document.getElementById('signup-btn')
+const authEmail     = document.getElementById('auth-email')
+const authPassword  = document.getElementById('auth-password')
+const authError     = document.getElementById('auth-error')
+const chatWelcome   = document.getElementById('chat-welcome')
+const logoutBtn     = document.getElementById('logout-btn')
+const messagesEl    = document.getElementById('messages')
+const messageForm   = document.getElementById('message-form')
+const messageInput  = document.getElementById('message-input')
+const userListEl    = document.getElementById('user-list')
 
 let socket = null
+let loggedInUsername = null  // set when the user completes a mock login
 
 // ---- Show / hide auth form ----
 showLoginBtn.addEventListener('click', () => {
@@ -65,57 +40,43 @@ joinAnonBtn.addEventListener('click', () => {
     enterChat(name, false)
 })
 
-// ---- Firebase login ----
-loginBtn.addEventListener('click', async () => {
-    if (!firebaseAuth) {
-        authError.textContent = 'Firebase is not configured on this server.'
+// ---- Login (username/password stored in session only — no external auth) ----
+loginBtn.addEventListener('click', () => {
+    const email = authEmail.value.trim()
+    const password = authPassword.value
+    if (!email || !password) {
+        authError.textContent = 'Please enter both email and password.'
         return
     }
     authError.textContent = ''
-    try {
-        const cred = await firebaseAuth.signInWithEmailAndPassword(
-            authEmail.value.trim(),
-            authPassword.value
-        )
-        currentUser = cred.user
-        const displayName = cred.user.email.split('@')[0]
-        enterChat(displayName, true)
-    } catch (e) {
-        authError.textContent = e.message
-    }
+    // Derive a display name from the email prefix
+    loggedInUsername = email.split('@')[0]
+    enterChat(loggedInUsername, true)
 })
 
-// ---- Firebase signup ----
-signupBtn.addEventListener('click', async () => {
-    if (!firebaseAuth) {
-        authError.textContent = 'Firebase is not configured on this server.'
+// ---- Sign up (same as login — no persistence needed for this demo) ----
+signupBtn.addEventListener('click', () => {
+    const email = authEmail.value.trim()
+    const password = authPassword.value
+    if (!email || !password) {
+        authError.textContent = 'Please enter both email and password.'
         return
     }
     authError.textContent = ''
-    try {
-        const cred = await firebaseAuth.createUserWithEmailAndPassword(
-            authEmail.value.trim(),
-            authPassword.value
-        )
-        currentUser = cred.user
-        const displayName = cred.user.email.split('@')[0]
-        enterChat(displayName, true)
-    } catch (e) {
-        authError.textContent = e.message
-    }
+    loggedInUsername = email.split('@')[0]
+    enterChat(loggedInUsername, true)
 })
 
 // ---- Logout ----
-logoutBtn.addEventListener('click', async () => {
-    if (firebaseAuth) {
-        await firebaseAuth.signOut()
-        currentUser = null
-    }
+logoutBtn.addEventListener('click', () => {
+    loggedInUsername = null
     if (socket) socket.disconnect()
+    socket = null
     chatSection.style.display = 'none'
     loginSection.style.display = 'block'
     anonJoin.style.display = 'flex'
     authForm.style.display = 'none'
+    authError.textContent = ''
     messagesEl.innerHTML = ''
     userListEl.innerHTML = ''
 })
@@ -153,13 +114,13 @@ function enterChat (username, isLoggedIn) {
         users.forEach((u) => {
             const li = document.createElement('li')
             li.textContent = u
-            // Only show "Add friend" button when the viewer is logged in and it's not themselves
+            // "Add friend" button only for logged-in users viewing other users
             if (isLoggedIn && u !== username) {
                 const btn = document.createElement('button')
                 btn.textContent = '+ Friend'
                 btn.classList.add('friend-btn')
                 btn.title = 'Send friend request (requires login)'
-                btn.addEventListener('click', () => sendFriendRequest(u))
+                btn.addEventListener('click', () => sendFriendRequest(username, u))
                 li.appendChild(btn)
             }
             userListEl.appendChild(li)
@@ -187,16 +148,11 @@ function showNotification (text) {
 }
 
 // ---- Friend request (requires login) ----
-function sendFriendRequest (targetUsername) {
-    if (!currentUser) {
+function sendFriendRequest (from, to) {
+    if (!loggedInUsername) {
         showNotification('You must be logged in to send friend requests.')
         return
     }
-    // Use display name (email prefix) to avoid exposing full email to other participants
-    const displayFrom = currentUser.email.split('@')[0]
-    socket.emit('friendRequest', {
-        from: displayFrom,
-        to: targetUsername
-    })
-    showNotification('Friend request sent to ' + targetUsername + '!')
+    socket.emit('friendRequest', { from, to })
+    showNotification('Friend request sent to ' + to + '!')
 }

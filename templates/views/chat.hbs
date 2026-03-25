@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Chat</title>
+    <link rel="icon" href="/img/weather.png">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="main-content">
+        {{>header}}
+
+        <div class="chat-info">
+            {{#if user}}
+                <p>Chatting as <strong>{{user}}</strong> (logged in)</p>
+            {{else}}
+                <p>Chatting as an <strong>anonymous</strong> user. <a href="/login">Login</a> or <a href="/register">register</a> to add friends.</p>
+            {{/if}}
+        </div>
+
+        <div class="chat-layout">
+            <div class="chat-main">
+                <div id="chat-messages" class="chat-messages"></div>
+                <form id="chat-form">
+                    <input id="chat-input" placeholder="Type a message..." autocomplete="off" />
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+            <div class="chat-sidebar">
+                <h3>Online</h3>
+                <ul id="online-users"></ul>
+            </div>
+        </div>
+    </div>
+    {{>footer}}
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const currentUser = {{currentUserJson}};
+        const csrfToken = "{{csrfToken}}";
+    </script>
+    <script src="/js/chat.js"></script>
+</body>
+
+</html>

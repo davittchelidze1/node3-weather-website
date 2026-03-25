@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>{{title}}</title>
+    <link rel="icon" href="/img/weather.png">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="main-content">
+        {{>header}}
+
+        <div class="auth-form">
+            {{#if isRegister}}
+                <h2>Create an Account</h2>
+                <p>Register to be able to add friends in the chat.</p>
+                <form method="POST" action="/register">
+                    {{#if error}}<p class="form-error">{{error}}</p>{{/if}}
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}" />
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input id="username" name="username" type="text" placeholder="Choose a username" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" placeholder="Choose a password" required />
+                    </div>
+                    <button type="submit">Register</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="/login">Login here</a></p>
+            {{else}}
+                <h2>Login</h2>
+                <p>Login to use friend features in the chat.</p>
+                <form method="POST" action="/login">
+                    {{#if error}}<p class="form-error">{{error}}</p>{{/if}}
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}" />
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input id="username" name="username" type="text" placeholder="Your username" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" placeholder="Your password" required />
+                    </div>
+                    <button type="submit">Login</button>
+                </form>
+                <p class="auth-switch">No account yet? <a href="/register">Register here</a></p>
+            {{/if}}
+        </div>
+    </div>
+    {{>footer}}
+</body>
+
+</html>

@@ -5,4 +5,12 @@
     <a href="/">Weather</a>
     <a href="/about">About</a>
     <a href="/help">Help</a>
+    <a href="/chat">Chat</a>
+    {{#if user}}
+        <span class="header-user">👤 {{user}}</span>
+        <a href="/logout">Logout</a>
+    {{else}}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    {{/if}}
 </header>

@@ -1,7 +1,7 @@
 body {
     color: #333333;
     font-family: arial;
-    max-width: 650px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 0 16px;
 
@@ -39,6 +39,12 @@ header a {
     text-decoration: none;
 }
 
+.header-user {
+    color: #555555;
+    margin-right: 16px;
+    font-size: 14px;
+}
+
 .portrait {
     width: 250px;
 }
@@ -58,4 +64,133 @@ button{
 :focus{
     outline: none;
     border-color: #555555;
+}
+
+/* Chat layout */
+.chat-layout {
+    display: flex;
+    gap: 16px;
+    height: 460px;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #cccccc;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fafafa;
+}
+
+.chat-message {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.chat-message--me {
+    color: #2244aa;
+}
+
+.chat-message--other {
+    color: #333333;
+}
+
+.chat-message--system {
+    color: #999999;
+    font-size: 13px;
+}
+
+.msg-author {
+    font-weight: bold;
+}
+
+#chat-form {
+    display: flex;
+    gap: 8px;
+}
+
+#chat-input {
+    flex: 1;
+}
+
+/* Online users sidebar */
+.chat-sidebar {
+    width: 160px;
+    border: 1px solid #cccccc;
+    padding: 8px;
+    overflow-y: auto;
+    background: #fafafa;
+}
+
+.chat-sidebar h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #555555;
+}
+
+.chat-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-sidebar li {
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px solid #eeeeee;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.friend-btn {
+    font-size: 11px;
+    padding: 2px 4px;
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+}
+
+.chat-info {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #555555;
+}
+
+/* Auth form */
+.auth-form {
+    max-width: 360px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #555555;
+}
+
+.form-group input {
+    padding: 8px;
+}
+
+.form-error {
+    color: #cc0000;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.auth-switch {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #888888;
 }
